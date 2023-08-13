@@ -48,7 +48,11 @@ func (d *Decoder) Decode() (*EmailContent, error) {
 	}
 	mediaType, mediaParams, err := mime.ParseMediaType(msg.Header.Get("Content-Type"))
 	if err != nil {
-		return nil, err
+		if err.Error() == "mime: no media type" {
+			d.plainText, _ = io.ReadAll(msg.Body)
+		} else {
+			return nil, err
+		}
 	}
 	if strings.HasPrefix(mediaType, "multipart/") {
 		d.findParts(msg.Body, mediaParams["boundary"])
