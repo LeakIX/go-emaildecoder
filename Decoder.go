@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"log"
 	"mime"
 	"mime/multipart"
 	"mime/quotedprintable"
@@ -84,7 +85,7 @@ func (d *Decoder) findParts(mime_data io.Reader, boundary string) {
 			d.findParts(newPart, params["boundary"])
 		} else if strings.HasPrefix(contentType, "text/") {
 			d.decodeText(newPart, contentType, newPart.Header.Get("Content-Transfer-Encoding"), params)
-		} else if mediaType, mediaParams, err := mime.ParseMediaType(newPart.Header.Get("Content-Disposition")); err == nil && mediaType == "attachment" && d.attachmentCallback != nil {
+		} else if mediaType, mediaParams, err := mime.ParseMediaType(newPart.Header.Get("Content-Disposition")); err == nil && (mediaType == "attachment" || mediaType == "inline") && d.attachmentCallback != nil {
 			attachment := Attachment{
 				Reader:      newPart,
 				ContentType: contentType,
@@ -93,6 +94,8 @@ func (d *Decoder) findParts(mime_data io.Reader, boundary string) {
 				d.attachmentIdx++
 				attachment.Filename = fmt.Sprintf("attachement-%d.file", d.attachmentIdx)
 			} else {
+				log.Println(filename)
+
 				attachment.Filename = filepath.Base(filename)
 			}
 			attachment.Reader = d.getDecodeReader(attachment.Reader, newPart.Header.Get("Content-Transfer-Encoding"), params)
