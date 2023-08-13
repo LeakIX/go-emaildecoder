@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
-	"log"
 	"mime"
 	"mime/multipart"
 	"mime/quotedprintable"
@@ -94,8 +93,6 @@ func (d *Decoder) findParts(mime_data io.Reader, boundary string) {
 				d.attachmentIdx++
 				attachment.Filename = fmt.Sprintf("attachement-%d.file", d.attachmentIdx)
 			} else {
-				log.Println(filename)
-
 				attachment.Filename = filepath.Base(filename)
 			}
 			attachment.Reader = d.getDecodeReader(attachment.Reader, newPart.Header.Get("Content-Transfer-Encoding"), params)
