@@ -112,7 +112,7 @@ func (d *Decoder) getDecodeReader(reader io.Reader, transferEncoding string, con
 	if strings.Contains(transferEncoding, "quoted-printable") {
 		reader = quotedprintable.NewReader(reader)
 	}
-	if charset, charsetFound := contentParams["charset"]; charsetFound && !strings.Contains(strings.ToLower(charset), "utf-8") {
+	if charset, charsetFound := contentParams["charset"]; charsetFound {
 		if charsetEncoding, charsetEncodingFound := charMapEncoders[strings.ToLower(charset)]; charsetEncodingFound {
 			reader = charsetEncoding.NewDecoder().Reader(reader)
 		}
