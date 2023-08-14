@@ -23,9 +23,9 @@ type Decoder struct {
 }
 
 type Attachment struct {
+	io.Reader
 	Filename    string
 	ContentType string
-	Reader      io.Reader
 }
 
 type EmailContent struct {

@@ -30,7 +30,7 @@ func handleAttachment(attachment emaildecoder.Attachment) {
 	fmt.Printf("Saving %s...\n", attachment.Filename)
 	if file, err := os.OpenFile(filepath.Join("attachments", attachment.Filename), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0640); err != nil {
 		panic(err)
-	} else if _, err = io.Copy(file, attachment.Reader); err != nil {
+	} else if _, err = io.Copy(file, attachment); err != nil {
 		panic(err)
 	} else if err = file.Close(); err != nil {
 		panic(err)
