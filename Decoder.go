@@ -79,12 +79,16 @@ func (d *Decoder) findParts(mime_data io.Reader, boundary string) {
 		if err != nil {
 			break
 		}
-		contentType, params, err := mime.ParseMediaType(newPart.Header.Get("Content-Type"))
-		if err == nil && strings.HasPrefix(contentType, "multipart/") {
-			d.findParts(newPart, params["boundary"])
-		} else if strings.HasPrefix(contentType, "text/") {
-			d.decodeText(newPart, contentType, newPart.Header.Get("Content-Transfer-Encoding"), params)
-		} else if mediaType, mediaParams, err := mime.ParseMediaType(newPart.Header.Get("Content-Disposition")); err == nil && (mediaType == "attachment" || mediaType == "inline") && d.attachmentCallback != nil {
+		contentType, contentParams, _ := mime.ParseMediaType(newPart.Header.Get("Content-Type"))
+		mediaType, mediaParams, _ := mime.ParseMediaType(newPart.Header.Get("Content-Disposition"))
+
+		if strings.HasPrefix(contentType, "multipart/") {
+			if contentBoundary, hasBoundary := contentParams["boundary"]; hasBoundary {
+				d.findParts(newPart, contentBoundary)
+			}
+		} else if strings.HasPrefix(contentType, "text/") && (mediaType == "" || mediaType == "inline") {
+			d.decodeText(newPart, contentType, newPart.Header.Get("Content-Transfer-Encoding"), contentParams)
+		} else if (mediaType == "attachment" || mediaType == "inline") && d.attachmentCallback != nil {
 			attachment := Attachment{
 				Reader:      newPart,
 				ContentType: contentType,
@@ -95,7 +99,7 @@ func (d *Decoder) findParts(mime_data io.Reader, boundary string) {
 			} else {
 				attachment.Filename = filepath.Base(filename)
 			}
-			attachment.Reader = d.getDecodeReader(attachment.Reader, newPart.Header.Get("Content-Transfer-Encoding"), params)
+			attachment.Reader = d.getDecodeReader(attachment.Reader, newPart.Header.Get("Content-Transfer-Encoding"), contentParams)
 			d.attachmentCallback(attachment)
 		}
 	}
