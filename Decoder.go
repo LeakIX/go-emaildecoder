@@ -48,15 +48,15 @@ func (d *Decoder) Decode() (*EmailContent, error) {
 	}
 	mediaType, mediaParams, err := mime.ParseMediaType(msg.Header.Get("Content-Type"))
 	if err != nil {
-		if err.Error() == "mime: no media type" {
+		if err.Error() == errNoMediaType {
 			d.plainText, _ = io.ReadAll(msg.Body)
 		} else {
 			return nil, err
 		}
 	}
-	if strings.HasPrefix(mediaType, "multipart/") {
+	if strings.HasPrefix(mediaType, multipartPrefix) {
 		d.findParts(msg.Body, mediaParams["boundary"])
-	} else if strings.HasPrefix(msg.Header.Get("Content-Type"), "text/") {
+	} else if strings.HasPrefix(msg.Header.Get("Content-Type"), textPrefix) {
 		d.decodeText(msg.Body, mediaType, msg.Header.Get("Content-Transfer-Encoding"), mediaParams)
 	}
 	return &EmailContent{
@@ -82,11 +82,11 @@ func (d *Decoder) findParts(mime_data io.Reader, boundary string) {
 		contentType, contentParams, _ := mime.ParseMediaType(newPart.Header.Get("Content-Type"))
 		mediaType, mediaParams, _ := mime.ParseMediaType(newPart.Header.Get("Content-Disposition"))
 
-		if strings.HasPrefix(contentType, "multipart/") {
+		if strings.HasPrefix(contentType, multipartPrefix) {
 			if contentBoundary, hasBoundary := contentParams["boundary"]; hasBoundary {
 				d.findParts(newPart, contentBoundary)
 			}
-		} else if strings.HasPrefix(contentType, "text/") && (mediaType == "" || mediaType == "inline") {
+		} else if strings.HasPrefix(contentType, textPrefix) && (mediaType == "" || mediaType == "inline") {
 			d.decodeText(newPart, contentType, newPart.Header.Get("Content-Transfer-Encoding"), contentParams)
 		} else if (mediaType == "attachment" || mediaType == "inline") && d.attachmentCallback != nil {
 			attachment := Attachment{
@@ -106,10 +106,10 @@ func (d *Decoder) findParts(mime_data io.Reader, boundary string) {
 }
 
 func (d *Decoder) getDecodeReader(reader io.Reader, transferEncoding string, contentParams map[string]string) io.Reader {
-	if strings.Contains(transferEncoding, "base64") {
+	if strings.Contains(transferEncoding, base64Encoding) {
 		reader = base64.NewDecoder(base64.StdEncoding, reader)
 	}
-	if strings.Contains(transferEncoding, "quoted-printable") {
+	if strings.Contains(transferEncoding, quotedPrintable) {
 		reader = quotedprintable.NewReader(reader)
 	}
 	if charset, charsetFound := contentParams["charset"]; charsetFound {
@@ -122,10 +122,10 @@ func (d *Decoder) getDecodeReader(reader io.Reader, transferEncoding string, con
 
 func (d *Decoder) decodeText(reader io.Reader, contentType, transferEncoding string, contentParams map[string]string) {
 	reader = d.getDecodeReader(reader, transferEncoding, contentParams)
-	if strings.HasPrefix(contentType, "text/plain") {
+	if strings.HasPrefix(contentType, textPlain) {
 		d.plainText, _ = io.ReadAll(reader)
 	}
-	if strings.HasPrefix(contentType, "text/html") {
+	if strings.HasPrefix(contentType, textHTML) {
 		d.html, _ = io.ReadAll(reader)
 	}
 }
