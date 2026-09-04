@@ -18,6 +18,8 @@ All notable changes to this project will be documented in this file.
 - Go directive bumped from 1.20 to 1.26, and tightened example file
   permissions ([baff0f6])
 - Bumped `golang.org/x/text` from 0.12.0 to 0.41.0 ([108d096])
+- Added `cooldown: default-days: 7` to dependabot updates to satisfy the
+  zizmor `dependabot-cooldown` audit ([2643134])
 
 ## [0.1.0]
 
@@ -32,3 +34,4 @@ All notable changes to this project will be documented in this file.
 [140bcf4]: https://github.com/LeakIX/go-emaildecoder/commit/140bcf4
 [3ec2843]: https://github.com/LeakIX/go-emaildecoder/commit/3ec2843
 [108d096]: https://github.com/LeakIX/go-emaildecoder/commit/108d096
+[2643134]: https://github.com/LeakIX/go-emaildecoder/commit/2643134
